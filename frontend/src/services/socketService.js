@@ -42,12 +42,16 @@ class SocketService {
         ? process.env.REACT_APP_SERVER_URL
         : (process.env.REACT_APP_SERVER_URL || 'http://localhost:5000');
 
-      console.log('SocketService: Using server URL:', serverUrl, 'env:', process.env.NODE_ENV);
+      const usePollingOnly = /vercel\.app$/i.test(new URL(serverUrl).host);
+      const transportsToUse = usePollingOnly ? ['polling'] : ['websocket', 'polling'];
+
+      console.log('SocketService: Using server URL:', serverUrl, 'env:', process.env.NODE_ENV, 'transports:', transportsToUse);
 
       this.socket = io(serverUrl, {
-        transports: ['websocket', 'polling'],
+        transports: transportsToUse,
         timeout: 20000,
         forceNew: true,
+        withCredentials: true,
       });
 
       this.socket.io.on('error', (err) => {
