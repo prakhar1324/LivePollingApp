@@ -10,9 +10,9 @@ const SessionResults = () => {
   const navigate = useNavigate();
   const { currentPoll, results, totalVotes } = useSelector((state) => state.poll);
 
-  const handleGoHome = () => {
-    navigate('/');
-  };
+  // const handleGoHome = () => {
+  //   navigate('/');
+  // };
   const dispatch = useDispatch();
 
   let RoleSelectionn = () => {
