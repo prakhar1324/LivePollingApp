@@ -39,17 +39,15 @@ class SocketService {
       console.log('SocketService: Creating new socket connection');
       
       // Determine server URL safely
-      const rawUrl = "https://live-polling-app-fawn.vercel.app";
-
+      const rawUrl = process.env.REACT_APP_SERVER_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5000');
       let serverUrl = rawUrl;
       try {
-        // Normalize relative values to absolute based on current origin
         if (!/^https?:\/\//i.test(rawUrl) && typeof window !== 'undefined' && window.location?.origin) {
           serverUrl = new URL(rawUrl, window.location.origin).toString();
         }
       } catch (_) {}
       
-      // Use polling only for Vercel backends (serverless doesn't support persistent websockets)
+      // Use polling only for Vercel backends, WebSocket+polling elsewhere (e.g., Render)
       let usePollingOnly = false;
       try {
         const host = new URL(serverUrl).host;
@@ -58,11 +56,14 @@ class SocketService {
         usePollingOnly = /vercel\.app/i.test(serverUrl);
       }
       const transportsToUse = usePollingOnly ? ['polling'] : ['websocket', 'polling'];
-      console.log('SocketService: Using server URL:', serverUrl, 'transports:', transportsToUse, 'upgrade:', usePollingOnly ? false : true);
+      const upgradeOption = usePollingOnly ? false : true;
+      console.log('SocketService: Using server URL:', serverUrl, 'transports:', transportsToUse, 'upgrade:', upgradeOption);
 
-      this.socket = io("https://live-polling-app-fawn.vercel.app", {
-        transports: ['polling'],
-        upgrade: false,
+      this.socket = io(serverUrl, {
+        transports: transportsToUse,
+        upgrade: upgradeOption,
+        timeout: 20000,
+        forceNew: true,
         withCredentials: true,
       });
 
