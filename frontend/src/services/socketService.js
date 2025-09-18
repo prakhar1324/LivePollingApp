@@ -39,7 +39,8 @@ class SocketService {
       console.log('SocketService: Creating new socket connection');
       
       // Determine server URL safely
-      const rawUrl = "https://live-polling-app-fawn.vercel.app";
+      const rawUrl = "https://livepollingapp-5cf0.onrender.com";
+
       let serverUrl = rawUrl;
       try {
         if (!/^https?:\/\//i.test(rawUrl) && typeof window !== 'undefined' && window.location?.origin) {
@@ -59,9 +60,9 @@ class SocketService {
       const upgradeOption = usePollingOnly ? false : true;
       console.log('SocketService: Using server URL:', serverUrl, 'transports:', transportsToUse, 'upgrade:', upgradeOption);
 
-      this.socket = io(serverUrl, {
-        transports: transportsToUse,
-        upgrade: upgradeOption,
+      this.socket = io(rawUrl, {
+        transports: ["websocket", "polling"],
+        upgrade: true,
         timeout: 20000,
         forceNew: true,
         withCredentials: true,
