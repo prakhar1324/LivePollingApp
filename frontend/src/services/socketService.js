@@ -63,7 +63,7 @@ class SocketService {
       this.socket = io(rawUrl, {
         transports: ["websocket", "polling"],
         upgrade: true,
-        timeout: 20000,
+        timeout: 25000,
         forceNew: true,
         withCredentials: true,
       });
