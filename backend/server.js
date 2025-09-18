@@ -30,7 +30,13 @@ const corsOptions = {
 
 const io = socketIo(server, {
   cors: {
-    origin: allowedOrigins,
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by Socket.IO CORS'));
+      }
+    },
     methods: ['GET', 'POST'],
     credentials: true,
   },
