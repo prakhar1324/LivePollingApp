@@ -1,6 +1,10 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import socketService from '../services/socketService';
+import { logout } from '../store/slices/userSlice';
+import { resetPoll } from '../store/slices/pollSlice';
+import { useDispatch } from 'react-redux';
 
 const SessionResults = () => {
   const navigate = useNavigate();
@@ -9,6 +13,16 @@ const SessionResults = () => {
   const handleGoHome = () => {
     navigate('/');
   };
+  const dispatch = useDispatch();
+
+  let RoleSelectionn = () => {
+    dispatch(logout());
+    dispatch(resetPoll());
+    localStorage.removeItem('pollingUser');
+    socketService.disconnect();
+    navigate('/');
+  };
+  
 
   const calculatePercentage = (votes) => {
     if (totalVotes === 0) return 0;
@@ -177,7 +191,7 @@ const SessionResults = () => {
         {}
         <div style={{ textAlign: 'center' }}>
           <button
-            onClick={handleGoHome}
+            onClick={RoleSelectionn}
             className="btn-primary"
             style={{
               padding: '16px 32px',
@@ -195,5 +209,6 @@ const SessionResults = () => {
     </div>
   );
 };
+
 
 export default SessionResults;
