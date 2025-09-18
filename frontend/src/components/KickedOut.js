@@ -31,7 +31,7 @@ const KickedOut = () => {
               marginBottom: '24px'
             }}
           >
-            ✓ Intervue Poll
+            ⭐ Intervue Poll
           </div>
           <h1 style={{ 
             fontSize: '32px', 
