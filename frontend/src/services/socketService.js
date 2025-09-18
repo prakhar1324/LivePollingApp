@@ -37,10 +37,37 @@ class SocketService {
 
     try {
       console.log('SocketService: Creating new socket connection');
-      this.socket = io(process.env.REACT_APP_SERVER_URL || 'http://localhost:5000', {
-        transports: ['websocket', 'polling'],
+      
+      // Determine server URL safely
+      const rawUrl = process.env.REACT_APP_SERVER_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5000');
+      let serverUrl = rawUrl;
+      try {
+        // Normalize relative values to absolute based on current origin
+        if (!/^https?:\/\//i.test(rawUrl) && typeof window !== 'undefined' && window.location?.origin) {
+          serverUrl = new URL(rawUrl, window.location.origin).toString();
+        }
+      } catch (_) {}
+      
+      // Use polling only for Vercel backends (serverless doesn't support persistent websockets)
+      let usePollingOnly = false;
+      try {
+        const host = new URL(serverUrl).host;
+        usePollingOnly = /vercel\.app$/i.test(host);
+      } catch (_) {
+        usePollingOnly = /vercel\.app/i.test(serverUrl);
+      }
+      const transportsToUse = usePollingOnly ? ['polling'] : ['websocket', 'polling'];
+      console.log('SocketService: Using server URL:', serverUrl, 'transports:', transportsToUse);
+
+      this.socket = io(serverUrl, {
+        transports: transportsToUse,
         timeout: 20000,
-        forceNew: true
+        forceNew: true,
+        withCredentials: true,
+      });
+
+      this.socket.on('connect_error', (err) => {
+        console.error('SocketService: connect_error:', err?.message || err);
       });
 
       this.setupEventListeners();
