@@ -135,7 +135,7 @@ const TeacherDashboard = () => {
               color: 'var(--black)',
               margin: '4px 0 0 0'
             }}>
-               you'll have the ability to create and manage polls, ask questions, and monitor your students' responses in real-time.
+               you'll have the ability to create and manage polls, ask questions, and monitor your students' responses.
             </p>
           </div>
           

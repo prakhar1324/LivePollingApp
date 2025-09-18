@@ -37,10 +37,14 @@ class SocketService {
 
     try {
       console.log('SocketService: Creating new socket connection');
-      this.socket = io(process.env.REACT_APP_SERVER_URL || 'http://localhost:5000', {
+      const serverUrl = (process.env.REACT_APP_SERVER_URL && process.env.NODE_ENV === 'production')
+        ? process.env.REACT_APP_SERVER_URL
+        : (process.env.REACT_APP_SERVER_URL || 'http://localhost:5000');
+
+      this.socket = io(serverUrl, {
         transports: ['websocket', 'polling'],
         timeout: 20000,
-        forceNew: true
+        forceNew: true,
       });
 
       this.setupEventListeners();
