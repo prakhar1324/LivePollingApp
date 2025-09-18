@@ -37,41 +37,10 @@ class SocketService {
 
     try {
       console.log('SocketService: Creating new socket connection');
-      // Determine server URL
-      const serverUrl = (process.env.REACT_APP_SERVER_URL && process.env.NODE_ENV === 'production')
-        ? process.env.REACT_APP_SERVER_URL
-        : (process.env.REACT_APP_SERVER_URL || 'http://localhost:5000');
-
-      const usePollingOnly = /vercel\.app$/i.test(new URL(serverUrl).host);
-      const transportsToUse = usePollingOnly ? ['polling'] : ['websocket', 'polling'];
-
-      console.log('SocketService: Using server URL:', serverUrl, 'env:', process.env.NODE_ENV, 'transports:', transportsToUse);
-
-      this.socket = io(serverUrl, {
-        transports: transportsToUse,
+      this.socket = io(process.env.REACT_APP_SERVER_URL || 'http://localhost:5000', {
+        transports: ['websocket', 'polling'],
         timeout: 20000,
-        forceNew: true,
-        withCredentials: true,
-      });
-
-      this.socket.io.on('error', (err) => {
-        console.error('SocketService: Manager error:', err?.message || err);
-      });
-
-      this.socket.io.on('reconnect_attempt', (attempt) => {
-        console.log('SocketService: Reconnect attempt:', attempt);
-      });
-
-      this.socket.io.on('reconnect_error', (err) => {
-        console.error('SocketService: Reconnect error:', err?.message || err);
-      });
-
-      this.socket.io.on('reconnect', (attempt) => {
-        console.log('SocketService: Reconnected after attempts:', attempt);
-      });
-
-      this.socket.on('connect_error', (err) => {
-        console.error('SocketService: connect_error:', err?.message || err);
+        forceNew: true
       });
 
       this.setupEventListeners();
