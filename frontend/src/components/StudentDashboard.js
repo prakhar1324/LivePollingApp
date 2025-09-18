@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { logout } from '../store/slices/userSlice';
@@ -16,18 +16,17 @@ const StudentDashboard = () => {
   const { name } = useSelector((state) => state.user);
   const { currentPoll, isActive, timeRemaining } = useSelector((state) => state.poll);
   const { isOpen: chatOpen } = useSelector((state) => state.chat);
-  
+
   const [localTimeRemaining, setLocalTimeRemaining] = useState(0);
   const [showResults, setShowResults] = useState(false);
-  const [resultsTimer, setResultsTimer] = useState(null);
+  const resultsTimerRef = useRef(null); // useRef instead of state
 
   useEffect(() => {
     if (timeRemaining > 0) {
-      console.log('StudentDashboard: Setting timer with timeRemaining:', timeRemaining);
       setLocalTimeRemaining(timeRemaining);
-      setShowResults(false); 
+      setShowResults(false);
       const timer = setInterval(() => {
-        setLocalTimeRemaining(prev => {
+        setLocalTimeRemaining((prev) => {
           if (prev <= 1000) {
             clearInterval(timer);
             return 0;
@@ -35,41 +34,34 @@ const StudentDashboard = () => {
           return prev - 1000;
         });
       }, 1000);
-      
+
       return () => clearInterval(timer);
     } else {
-      
       setLocalTimeRemaining(0);
     }
   }, [timeRemaining, currentPoll]);
 
-  
   useEffect(() => {
-    
     if (!isActive && currentPoll && (localTimeRemaining <= 0 || timeRemaining <= 0)) {
       console.log('Poll ended, showing results for 10 seconds');
       setShowResults(true);
-      
-      
-      if (resultsTimer) {
-        clearTimeout(resultsTimer);
+
+      if (resultsTimerRef.current) {
+        clearTimeout(resultsTimerRef.current);
       }
-      
-      
-      const timer = setTimeout(() => {
+
+      resultsTimerRef.current = setTimeout(() => {
         console.log('Hiding results after 10 seconds');
         setShowResults(false);
       }, 10000);
-      
-      setResultsTimer(timer);
     }
-    
+
     return () => {
-      if (resultsTimer) {
-        clearTimeout(resultsTimer);
+      if (resultsTimerRef.current) {
+        clearTimeout(resultsTimerRef.current);
       }
     };
-  }, [isActive, currentPoll, localTimeRemaining, timeRemaining, resultsTimer]);
+  }, [isActive, currentPoll, localTimeRemaining, timeRemaining]);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -83,22 +75,19 @@ const StudentDashboard = () => {
     dispatch(toggleChat());
   };
 
-
   return (
-    <div style={{ 
-      minHeight: '100vh', 
-      padding: '20px'
-    }}>
+    <div style={{ minHeight: '100vh', padding: '20px' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        {}
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          marginBottom: '24px'
-        }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px',
+          }}
+        >
           <div>
-            <div 
+            <div
               className="gradient-bg"
               style={{
                 display: 'inline-block',
@@ -107,27 +96,26 @@ const StudentDashboard = () => {
                 color: 'var(--white)',
                 fontSize: '14px',
                 fontWeight: '500',
-                marginBottom: '8px'
+                marginBottom: '8px',
               }}
             >
               ⭐ Intervue Poll
             </div>
-            <h1 style={{ 
-              fontSize: '28px', 
-              fontWeight: 'bold',
-              color: 'var(--black)',
-              margin: 0
-            }}>
+            <h1
+              style={{
+                fontSize: '28px',
+                fontWeight: 'bold',
+                color: 'var(--black)',
+                margin: 0,
+              }}
+            >
               Student Dashboard
             </h1>
-            <p style={{ 
-              color: 'var(--black)',
-              margin: '4px 0 0 0'
-            }}>
+            <p style={{ color: 'var(--black)', margin: '4px 0 0 0' }}>
               Welcome, {name}
             </p>
           </div>
-          
+
           <button
             onClick={handleLogout}
             style={{
@@ -137,27 +125,30 @@ const StudentDashboard = () => {
               border: '1px solid var(--black)',
               borderRadius: '8px',
               cursor: 'pointer',
-              fontSize: '14px'
+              fontSize: '14px',
             }}
           >
             Logout
           </button>
         </div>
 
-        {}
         <div className="card" style={{ height: '60vh' }}>
           {!isActive && !showResults ? (
-            <div style={{ 
-              textAlign: 'center', 
-              padding: '60px 20px',
-              color: 'var(--medium-gray)'
-            }}>
+            <div
+              style={{
+                textAlign: 'center',
+                padding: '60px 20px',
+                color: 'var(--medium-gray)',
+              }}
+            >
               <div className="spinner" style={{ margin: '0 auto 24px' }}></div>
-              <h2 style={{ 
-                fontSize: '24px', 
-                marginBottom: '12px',
-                color: 'var(--black)'
-              }}>
+              <h2
+                style={{
+                  fontSize: '24px',
+                  marginBottom: '12px',
+                  color: 'var(--black)',
+                }}
+              >
                 Wait for the teacher to ask questions..
               </h2>
               <p style={{ fontSize: '16px' }}>
@@ -173,10 +164,8 @@ const StudentDashboard = () => {
           )}
         </div>
 
-        {}
         {chatOpen && <Chat />}
-        
-        {}
+
         <button
           onClick={handleToggleChat}
           className="chat-fab"
