@@ -6,7 +6,7 @@ import socketService from '../services/socketService';
 const PollResults = () => {
   const dispatch = useDispatch();
   const { currentPoll, results, totalVotes, userAnswer, hasAnswered, isActive, timeRemaining } = useSelector((state) => state.poll);
-  const { name, role } = useSelector((state) => state.user);
+  const { role } = useSelector((state) => state.user);
   const [selectedOption, setSelectedOption] = useState(null);
   const [localTimeRemaining, setLocalTimeRemaining] = useState(timeRemaining);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -131,7 +131,6 @@ const PollResults = () => {
           const isUserAnswer = userAnswer === index;
           const isSelected = selectedOption === index;
           const isClickable = role === 'student' && !hasAnswered && isActive;
-          const isCorrect = false; 
           
           
           
@@ -268,7 +267,7 @@ const PollResults = () => {
               cursor: isSubmitting ? 'not-allowed' : 'pointer'
             }}
           >
-            {isSubmitting ? '⏳ Submitting...' : '✅ Submit Vote'}
+            {isSubmitting ? '⏳ Submitting...' : ' Submit Vote'}
           </button>
         </div>
       )}
@@ -285,7 +284,7 @@ const PollResults = () => {
           fontSize: '16px',
           fontWeight: '500'
         }}>
-          ✅ Your answer has been submitted! Results will be shown when the poll ends.
+           Your answer has been submitted! Results will be shown when the poll ends.
         </div>
       )}
 
