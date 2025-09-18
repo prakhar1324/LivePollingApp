@@ -61,12 +61,10 @@ class SocketService {
       console.log('SocketService: Using server URL:', serverUrl, 'transports:', transportsToUse, 'upgrade:', upgradeOption);
 
       this.socket = io(rawUrl, {
-        transports: ["websocket", "polling"],
-        upgrade: true,
-        timeout: 25000,
-        forceNew: true,
-        withCredentials: true,
+        transports: ["polling"],
+        upgrade: false,
       });
+      
 
       this.socket.on('connect_error', (err) => {
         console.error('SocketService: connect_error:', err?.message || err);
