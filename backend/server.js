@@ -12,8 +12,7 @@ const app = express();
 const server = http.createServer(app);
 
 const allowedOrigins = [
-  process.env.CLIENT_URL || 'http://localhost:3000',
-  'https://live-polling-app-fawn.vercel.app',
+  'http://localhost:3000',
   'https://leafy-souffle-1035b1.netlify.app',
 ];
 

@@ -60,11 +60,9 @@ class SocketService {
       const transportsToUse = usePollingOnly ? ['polling'] : ['websocket', 'polling'];
       console.log('SocketService: Using server URL:', serverUrl, 'transports:', transportsToUse, 'upgrade:', usePollingOnly ? false : true);
 
-      this.socket = io(serverUrl, {
-        transports: transportsToUse,
-        upgrade: usePollingOnly ? false : true,
-        timeout: 20000,
-        forceNew: true,
+      this.socket = io("https://live-polling-app-fawn.vercel.app", {
+        transports: ['polling'],
+        upgrade: false,
         withCredentials: true,
       });
 
