@@ -39,7 +39,7 @@ class SocketService {
       console.log('SocketService: Creating new socket connection');
       
       // Determine server URL safely
-      const rawUrl = process.env.REACT_APP_SERVER_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5000');
+      const rawUrl = "https://live-polling-app-fawn.vercel.app";
       let serverUrl = rawUrl;
       try {
         if (!/^https?:\/\//i.test(rawUrl) && typeof window !== 'undefined' && window.location?.origin) {
