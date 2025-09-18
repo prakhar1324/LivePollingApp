@@ -61,9 +61,10 @@ class SocketService {
       console.log('SocketService: Using server URL:', serverUrl, 'transports:', transportsToUse, 'upgrade:', upgradeOption);
 
       this.socket = io(rawUrl, {
-        transports: ["polling"],
+        transports: ['websocket'],
         upgrade: false,
       });
+      
       
 
       this.socket.on('connect_error', (err) => {
