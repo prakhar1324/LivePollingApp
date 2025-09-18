@@ -60,8 +60,9 @@ class SocketService {
       const upgradeOption = usePollingOnly ? false : true;
       console.log('SocketService: Using server URL:', serverUrl, 'transports:', transportsToUse, 'upgrade:', upgradeOption);
 
-      const socket = io("https://livepollingapp-5cf0.onrender.com", {
-        transports: ['websocket'], // Avoid XHR polling
+      this.socket = io(rawUrl, {
+        transports: ["polling"],
+        upgrade: false,
       });
       
 
