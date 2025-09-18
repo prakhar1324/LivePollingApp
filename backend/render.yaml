@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: polling-backend
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: CLIENT_URL
+        value: https://your-frontend-url.vercel.app
+      - key: MONGODB_URI
+        value: mongodb+srv://username:password@cluster.mongodb.net/polling-app
+
+
