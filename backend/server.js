@@ -83,11 +83,12 @@ io.on('connection', (socket) => {
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://prakhar:shivi%4021@pollingdb.kn5qavp.mongodb.net/polling-app?retryWrites=true&w=majority&appName=pollingDB';
 let isMongoConnected = false;
 
+// Enhance initial Mongo connect with higher timeouts
 mongoose.connect(MONGODB_URI, { 
   useNewUrlParser: true, 
   useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 5000,
-  socketTimeoutMS: 45000,
+  serverSelectionTimeoutMS: 20000,
+  socketTimeoutMS: 60000,
 })
   .then(() => {
     console.log('Connected to MongoDB Atlas');
@@ -502,18 +503,30 @@ async function ensureMongoConnection() {
       console.log('[Mongo] Currently connecting...');
       return true;
     }
-    console.log('[Mongo] Attempting reconnection...');
-    await mongoose.connect(MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
-    });
-    isMongoConnected = true;
-    console.log('[Mongo] Reconnected successfully');
-    return true;
+
+    const maxAttempts = 3;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        console.log(`[Mongo] Attempting reconnection (attempt ${attempt}/${maxAttempts})...`);
+        await mongoose.connect(MONGODB_URI, {
+          useNewUrlParser: true,
+          useUnifiedTopology: true,
+          serverSelectionTimeoutMS: 20000,
+          socketTimeoutMS: 60000,
+        });
+        isMongoConnected = true;
+        console.log('[Mongo] Reconnected successfully');
+        return true;
+      } catch (innerErr) {
+        console.log(`[Mongo] Reconnect attempt ${attempt} failed:`, innerErr.message);
+        if (attempt === maxAttempts) throw innerErr;
+        await new Promise(r => setTimeout(r, 500 * attempt));
+      }
+    }
+
+    return false;
   } catch (err) {
-    console.log('[Mongo] ensureMongoConnection failed:', err.message);
+    console.log('[Mongo] ensureMongoConnection failed:', err.message, 'name:', err.name, 'code:', err.code);
     isMongoConnected = false;
     return false;
   }
