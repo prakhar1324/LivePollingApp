@@ -17,9 +17,14 @@ const io = socketIo(server, {
   }
 });
 
+app.get('/', (req, res) => {
+  res.send('Server is running successfully !! ');
+});
 
 app.use(cors());
 app.use(express.json());
+
+
 
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://prakhar:shivi%4021@pollingdb.kn5qavp.mongodb.net/polling-app?retryWrites=true&w=majority&appName=pollingDB';
