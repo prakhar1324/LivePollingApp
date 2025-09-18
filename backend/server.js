@@ -44,7 +44,40 @@ app.get('/', (req, res) => {
 app.use(cors(corsOptions));
 app.use(express.json());
 
+// Simple request logger
+app.use((req, res, next) => {
+  console.log(`[REQ] ${req.method} ${req.url} - ${new Date().toISOString()}`);
+  next();
+});
 
+// Enhance initial Mongo connect logs
+console.log('Initializing Mongo connection...');
+
+// Socket.IO connection error logging
+io.engine.on('connection_error', (err) => {
+  console.error('[Socket.IO] connection_error', {
+    code: err.code,
+    message: err.message,
+    context: err.context,
+  });
+});
+
+io.on('connection', (socket) => {
+  console.log(`[Socket.IO] Client connected: ${socket.id}`);
+
+  socket.conn.on('packetCreate', (packet) => {
+    if (packet.type === 'ping' || packet.type === 'pong') return;
+    // console.log(`[Socket.IO] packetCreate:`, packet.type);
+  });
+
+  socket.on('error', (e) => {
+    console.error(`[Socket.IO] socket error: ${socket.id}`, e);
+  });
+
+  socket.on('disconnect', (reason) => {
+    console.log(`[Socket.IO] Client disconnected: ${socket.id} — reason: ${reason}`);
+  });
+});
 
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://prakhar:shivi%4021@pollingdb.kn5qavp.mongodb.net/polling-app?retryWrites=true&w=majority&appName=pollingDB';
@@ -456,14 +489,45 @@ async function endPoll() {
   console.log('Poll ended');
 }
 
+// Lazy Mongo connection helper to recover after cold starts
+async function ensureMongoConnection() {
+  try {
+    console.log(`[Mongo] readyState=${mongoose.connection.readyState}`);
+    if (mongoose.connection.readyState === 1) {
+      isMongoConnected = true;
+      console.log('[Mongo] Already connected');
+      return true;
+    }
+    if (mongoose.connection.readyState === 2) {
+      console.log('[Mongo] Currently connecting...');
+      return true;
+    }
+    console.log('[Mongo] Attempting reconnection...');
+    await mongoose.connect(MONGODB_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
+    });
+    isMongoConnected = true;
+    console.log('[Mongo] Reconnected successfully');
+    return true;
+  } catch (err) {
+    console.log('[Mongo] ensureMongoConnection failed:', err.message);
+    isMongoConnected = false;
+    return false;
+  }
+}
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
 app.get('/api/poll-history', async (req, res) => {
   console.log('API: Getting poll history from database only');
-  
-  if (!isMongoConnected) {
+
+  const ok = await ensureMongoConnection();
+  if (!ok) {
     return res.json({ 
       polls: [],
       count: 0,
@@ -471,7 +535,7 @@ app.get('/api/poll-history', async (req, res) => {
       error: 'MongoDB not connected'
     });
   }
-  
+
   try {
     const dbPolls = await Poll.find().sort({ createdAt: -1 });
     console.log(`API: Retrieved ${dbPolls.length} polls from database`);
@@ -480,7 +544,7 @@ app.get('/api/poll-history', async (req, res) => {
     res.json({ 
       polls: dbPolls,
       count: dbPolls.length,
-      mongoConnected: isMongoConnected,
+      mongoConnected: true,
       source: 'database'
     });
   } catch (error) {
@@ -488,7 +552,7 @@ app.get('/api/poll-history', async (req, res) => {
     res.json({ 
       polls: [],
       count: 0,
-      mongoConnected: isMongoConnected,
+      mongoConnected: true,
       error: error.message
     });
   }
@@ -496,47 +560,46 @@ app.get('/api/poll-history', async (req, res) => {
 
 app.get('/api/test-db', async (req, res) => {
   console.log('API: Testing database connection and operations');
-  
+
+  const ok = await ensureMongoConnection();
   const testResult = {
-    mongoConnected: isMongoConnected,
+    mongoConnected: ok,
     connectionString: MONGODB_URI.replace(/:[^@]+@/, ':****@'),
     tests: {}
   };
-  
-  if (!isMongoConnected) {
+  if (!ok) {
     testResult.error = 'MongoDB not connected';
     return res.json(testResult);
   }
-  
+
   try {
     const totalPolls = await Poll.countDocuments();
     testResult.tests.totalPolls = totalPolls;
-    
+
     const testPolls = await Poll.find({ question: { $regex: /^Test Poll/ } });
     testResult.tests.testPolls = testPolls.length;
-    
+
     const recentPolls = await Poll.find().sort({ createdAt: -1 }).limit(5);
     testResult.tests.recentPolls = recentPolls.map(p => ({
       question: p.question,
       totalVotes: p.totalVotes,
       createdAt: p.createdAt
     }));
-    
+
     const testPoll = new Poll({
-      question: "DB Test Poll - DELETE ME",
-      options: ["Test"],
+      question: 'DB Test Poll - DELETE ME',
+      options: ['Test'],
       results: [1],
       totalVotes: 1
     });
     await testPoll.save();
     await Poll.findByIdAndDelete(testPoll._id);
     testResult.tests.writeTest = 'SUCCESS';
-    
   } catch (error) {
     console.error('API: Database test error:', error);
     testResult.tests.error = error.message;
   }
-  
+
   res.json(testResult);
 });
 

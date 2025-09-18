@@ -37,14 +37,37 @@ class SocketService {
 
     try {
       console.log('SocketService: Creating new socket connection');
+      // Determine server URL
       const serverUrl = (process.env.REACT_APP_SERVER_URL && process.env.NODE_ENV === 'production')
         ? process.env.REACT_APP_SERVER_URL
         : (process.env.REACT_APP_SERVER_URL || 'http://localhost:5000');
+
+      console.log('SocketService: Using server URL:', serverUrl, 'env:', process.env.NODE_ENV);
 
       this.socket = io(serverUrl, {
         transports: ['websocket', 'polling'],
         timeout: 20000,
         forceNew: true,
+      });
+
+      this.socket.io.on('error', (err) => {
+        console.error('SocketService: Manager error:', err?.message || err);
+      });
+
+      this.socket.io.on('reconnect_attempt', (attempt) => {
+        console.log('SocketService: Reconnect attempt:', attempt);
+      });
+
+      this.socket.io.on('reconnect_error', (err) => {
+        console.error('SocketService: Reconnect error:', err?.message || err);
+      });
+
+      this.socket.io.on('reconnect', (attempt) => {
+        console.log('SocketService: Reconnected after attempts:', attempt);
+      });
+
+      this.socket.on('connect_error', (err) => {
+        console.error('SocketService: connect_error:', err?.message || err);
       });
 
       this.setupEventListeners();
